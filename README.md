@@ -1,39 +1,53 @@
-Raspberry Pi Guide For Hacking
-This guide provides step-by-step instructions on how to set up your Raspberry Pi for hacking using Kali Linux. It covers flashing the Kali Linux image onto an SD card and setting up your Raspberry Pi Zero W.
+# Lazypi0 automation tool for linux
 
-Prerequisites
-Raspberry Pi Zero W
-SD card (minimum 16GB recommended)
-Raspberry Pi Imager or other flashing software
-Kali Linux image for Raspberry Pi Zero W (Download from here)
-Installation Steps
-Download the Kali Linux image for Raspberry Pi Zero W from the provided link:
+This bash script provides a collection of tools and functionalities for automating various tasks related to network security, WiFi manipulation, and system administration. The script is designed to run on Linux systems, particularly Debian-based distributions like Ubuntu.
 
-Download link: Kali Linux for Raspberry Pi Zero W
-Flash the Kali Linux image onto the SD card:
+## Features
 
-Use Raspberry Pi Imager or other flashing software to flash the image onto the SD card.
-Follow the instructions provided by the flashing software to complete the process.
-Set up Raspberry Pi Zero W:
+- **Tool Check**: Automatically checks for and installs missing tools required for network manipulation and penetration testing.
 
-Insert the flashed SD card into the Raspberry Pi Zero W.
-Connect the Raspberry Pi Zero W to a power source and monitor using appropriate cables.
-Boot into Kali Linux:
+- **Bluetooth Functions**:
+  - `bluetooth_devices`: Scans for nearby Bluetooth devices.
+  - `bluetooth_doos`: Performs denial-of-service attacks on Bluetooth devices.
 
-Power on the Raspberry Pi Zero W and wait for it to boot into Kali Linux.
-Follow the on-screen instructions to complete the initial setup.
-Start hacking:
+- **Hotspot Management**:
+  - `hotsport_only`: Sets up a hotspot with a specified name and password without enabling SSH.
+  - `hotsport_ssh`: Sets up a hotspot with a specified name and password and enables SSH autostart.
 
-Once the setup is complete, you can start exploring the hacking tools and features available in Kali Linux on your Raspberry Pi Zero W.
-Additional Resources
-For further information and guides on using Kali Linux and Raspberry Pi for hacking, refer to the following resources:
+- **WiFi Functions**:
+  - `wifi_network`: Connects to a WiFi network by selecting from available networks and entering a password.
+  - `change_mac_address`: Changes the MAC address of a selected network interface.
+  - `restore_mac_address`: Restores the original MAC address of a selected network interface.
 
-Official Kali Linux Documentation: https://www.kali.org/docs/
-Raspberry Pi Documentation: https://www.raspberrypi.org/documentation/
-Please note that hacking should be conducted responsibly and legally, respecting the privacy and security of others. Always ensure that you have the necessary permissions and adhere to applicable laws and regulations.
+- **Network Manipulation**:
+  - `ip_change`: Changes the IP address of a selected network interface.
+  - `restore_ip_change`: Restores the original IP address of a selected network interface.
+  - `start_monitor_mode`: Starts monitor mode on a selected network interface.
+  - `stop_monitor_mode`: Stops monitor mode on a selected network interface.
 
-Disclaimer: The guide provided here is for educational purposes only. The authors and contributors of this guide do not encourage or endorse any illegal activities. Hacking should only be performed with proper authorization and within the boundaries of the law.
+- **WiFi Hacking**:
+  - `try_to_hack_wifi`: Attempts to hack WiFi networks using Reaver.
+  - `handshake_brute`: Performs brute force attack on WiFi handshake files.
+  - `wifi_jamming`: Performs WiFi jamming attacks using Aircrack or Mdk3.
 
-Feel free to contribute to this guide by submitting pull requests or suggesting improvements.
+- **Additional Tools**:
+  - `wifite`: Initiates the Wifite tool for automated wireless auditing.
+  - `wifiphisher`: Executes Wifiphisher to perform phishing attacks against WiFi networks.
+  - `airodump`: Starts Airodump-ng for WiFi packet capture.
 
-Happy hacking!
+- **Network Services**:
+  - `ssh_on`: Starts and enables SSH service.
+  - `rdp_on`: Starts and enables Remote Desktop Protocol (RDP) service.
+  - `php_server`: Starts a PHP server.
+  - `apache2_server`: Starts and enables Apache HTTP server.
+
+- **Network Analysis**:
+  - `listen_port`: Listens on a specified port for incoming connections.
+  - `sdr_server`: Starts a Software-Defined Radio (SDR) server.
+  - `dns_spoof`: Spoofs DNS responses for specified IP addresses and domains.
+  - `sniffing`: Performs network sniffing and packet capture.
+  - `bypass_https`: Bypasses HTTPS security mechanisms.
+  - `host_discover`: Discovers hosts on the network.
+
+- **Miscellaneous**:
+  - `ssh_file`: Transfers files using SCP over SSH.
