@@ -1,4 +1,4 @@
-# WiFi Tool Suite
+# LazyPi0
 
 This script is a comprehensive tool for managing and attacking WiFi networks. It includes functions for checking and installing necessary tools, setting up WiFi hotspots, changing MAC and IP addresses, and executing various WiFi attacks.
 
@@ -39,4 +39,7 @@ Ensure you have the following packages installed:
 To run the script, make sure it is executable:
 
 ```sh
-chmod +x script.sh
+git clone https://github.com/nahid0x1/lazypi0
+cd lazypi0
+chmod +x lazypi
+mv lazypi /bin
