@@ -1,53 +1,42 @@
-# Lazypi0 automation tool for linux
+# WiFi Tool Suite
 
-This bash script provides a collection of tools and functionalities for automating various tasks related to network security, WiFi manipulation, and system administration. The script is designed to run on Linux systems, particularly Debian-based distributions like Ubuntu.
+This script is a comprehensive tool for managing and attacking WiFi networks. It includes functions for checking and installing necessary tools, setting up WiFi hotspots, changing MAC and IP addresses, and executing various WiFi attacks.
 
 ## Features
 
-- **Tool Check**: Automatically checks for and installs missing tools required for network manipulation and penetration testing.
+- **Tools Check**: Verify and install missing dependencies.
+- **Hotspot Setup**: Create a WiFi hotspot.
+- **Raspberry Pi Zero W Configuration**: Setup for USB networking.
+- **WiFi Network Management**: Connect to WiFi networks.
+- **MAC Address Management**: Change and restore MAC addresses.
+- **IP Address Management**: Change and restore IP addresses.
+- **WiFi Attack Modes**: Start and stop monitor mode, run WiFi attacks using tools like `wifite`, `aircrack-ng`, `reaver`, etc.
+- **Miscellaneous**: Functions for jamming WiFi networks and cracking WPS pins.
 
-- **Bluetooth Functions**:
-  - `bluetooth_devices`: Scans for nearby Bluetooth devices.
-  - `bluetooth_doos`: Performs denial-of-service attacks on Bluetooth devices.
+## Usage
 
-- **Hotspot Management**:
-  - `hotsport_only`: Sets up a hotspot with a specified name and password without enabling SSH.
-  - `hotsport_ssh`: Sets up a hotspot with a specified name and password and enables SSH autostart.
+### Prerequisites
 
-- **WiFi Functions**:
-  - `wifi_network`: Connects to a WiFi network by selecting from available networks and entering a password.
-  - `change_mac_address`: Changes the MAC address of a selected network interface.
-  - `restore_mac_address`: Restores the original MAC address of a selected network interface.
+Ensure you have the following packages installed:
+- `golang`
+- `php`
+- `reaver`
+- `wifite`
+- `aircrack-ng`
+- `mdk3`
+- `mdk4`
+- `wifipumpkin3`
+- `rtlsdr-scanner`
+- `bettercap`
+- `bully`
+- `nmap`
+- `apache2`
+- `mitmproxy`
+- `gr-gsm`
 
-- **Network Manipulation**:
-  - `ip_change`: Changes the IP address of a selected network interface.
-  - `restore_ip_change`: Restores the original IP address of a selected network interface.
-  - `start_monitor_mode`: Starts monitor mode on a selected network interface.
-  - `stop_monitor_mode`: Stops monitor mode on a selected network interface.
+### Running the Script
 
-- **WiFi Hacking**:
-  - `try_to_hack_wifi`: Attempts to hack WiFi networks using Reaver.
-  - `handshake_brute`: Performs brute force attack on WiFi handshake files.
-  - `wifi_jamming`: Performs WiFi jamming attacks using Aircrack or Mdk3.
+To run the script, make sure it is executable:
 
-- **Additional Tools**:
-  - `wifite`: Initiates the Wifite tool for automated wireless auditing.
-  - `wifiphisher`: Executes Wifiphisher to perform phishing attacks against WiFi networks.
-  - `airodump`: Starts Airodump-ng for WiFi packet capture.
-
-- **Network Services**:
-  - `ssh_on`: Starts and enables SSH service.
-  - `rdp_on`: Starts and enables Remote Desktop Protocol (RDP) service.
-  - `php_server`: Starts a PHP server.
-  - `apache2_server`: Starts and enables Apache HTTP server.
-
-- **Network Analysis**:
-  - `listen_port`: Listens on a specified port for incoming connections.
-  - `sdr_server`: Starts a Software-Defined Radio (SDR) server.
-  - `dns_spoof`: Spoofs DNS responses for specified IP addresses and domains.
-  - `sniffing`: Performs network sniffing and packet capture.
-  - `bypass_https`: Bypasses HTTPS security mechanisms.
-  - `host_discover`: Discovers hosts on the network.
-
-- **Miscellaneous**:
-  - `ssh_file`: Transfers files using SCP over SSH.
+```sh
+chmod +x script.sh
