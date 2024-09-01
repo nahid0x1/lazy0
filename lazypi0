@@ -7,7 +7,7 @@ function tools_check(){
 clear
 echo "Checking Missing Tools....!"
 
-packages=("golang" "php" "reaver" "wifite" "aircrack-ng" "mdk3" "mdk4" "wifipumpkin3" "rtlsdr-scanner" "bettercap" "bully" "nmap" "apache2" "mitmproxy" "gr-gsm")
+packages=("golang" "php" "reaver" "wifite" "aircrack-ng" "mdk3" "mdk4" "wifipumpkin3" "rtlsdr-scanner" "bettercap" "bully" "nmap" "apache2" "mitmproxy" "gr-gsm" "htop")
 missing_packages=()
 
 for package in "${packages[@]}"
@@ -59,6 +59,24 @@ function hotsport_only() {
   sleep 2
 }
 
+function delete_hotsport(){
+
+  clear
+  read -p "Hotspot name: " ssid_name
+  nmcli connection delete $ssid_name
+
+}
+
+
+function show_networks(){
+
+  clear
+  nmcli connection show
+  sleep 1d
+
+}
+
+
 function hotsport_ssh() {
   echo -e "***Hotspot Setup***\n"
   read -p "Set hotspot name: " ssid_name
@@ -86,7 +104,7 @@ function hotsport_ssh() {
   sleep 2
 }
 
-function rpi0w() {
+function rpi() {
 
   # Define the network configuration for usb0
   config="
@@ -105,9 +123,14 @@ function rpi0w() {
   else
       # Append the configuration to the /etc/network/interfaces file
       echo "$config" | sudo tee -a /etc/network/interfaces
-
-      echo "Configuration for usb0 has been added."
+      echo "IyEvYmluL2Jhc2gKCiMgRGVmaW5lIHRoZSBmaWxlIHBhdGgKRklMRT0iL2V0Yy9yZXNvbHYuY29uZiIKCiMgUmVhZCB0aGUgZmlsZSwgcmVtb3ZlIGxpbmVzIGNvbnRhaW5pbmcgdGhlIHNwZWNpZmllZCBzdHJpbmdzLCBhbmQgcHJpbnQgb25seSB0aGUgSVAgYWRkcmVzcwppcD0kKGdyZXAgLW9QICcoPzw9bmFtZXNlcnZlclxzKShbMC05XXsxLDN9XC4pezN9WzAtOV17MSwzfScgIiRGSUxFIikKCnN1ZG8gcm91dGUgYWRkIGRlZmF1bHQgZ3cgJGlwIHdsYW4wCgpzdWRvIGlwdGFibGVzIC10IG5hdCAtQSBQT1NUUk9VVElORyAtbyB3bGFuMCAtaiBNQVNRVUVSQURFCnN1ZG8gaXB0YWJsZXMgLUEgRk9SV0FSRCAtaSB3bGFuMCAtbyB1c2IwIC1tIHN0YXRlIC0tc3RhdGUgUkVMQVRFRCxFU1RBQkxJU0hFRCAtaiBBQ0NFUFQKc3VkbyBpcHRhYmxlcyAtQSBGT1JXQVJEIC1pIHVzYjAgLW8gd2xhbjAgLWogQUNDRVBUCg==" | base64 -d | tee /bin/netup
+      chmod +x /bin/netup
+      echo "W1VuaXRdCkRlc2NyaXB0aW9uPU5ldHVwIFNlcnZpY2UKQWZ0ZXI9bmV0d29yay50YXJnZXQKCltTZXJ2aWNlXQpFeGVjU3RhcnQ9bmV0dXAKUmVzdGFydD1vbi1mYWlsdXJlCkV4ZWNTdG9wPS9iaW4va2lsbCAkTUFJTlBJRAoKW0luc3RhbGxdCldhbnRlZEJ5PW11bHRpLXVzZXIudGFyZ2V0Cgo=" | base64 -d | tee /usr/lib/systemd/system/netup.service
+      systemctl start netup
+      systemctl enable netup
+      echo "Configuration for usb0 has been added"
   fi
+
 
   sudo systemctl enable avahi-daemon
   sudo systemctl start avahi-daemon
@@ -115,9 +138,10 @@ function rpi0w() {
   echo "sudo iw phy phy0 interface add mon0 type monitor" >> /bin/mon0
   echo "sudo ip link set mon0 up" >> /bin/mon0
   chmod +x /bin/mon0
+  echo "mon0 Configuration Successfull"
 
   apt update
-  apt install hcxtools -y
+  apt install hcxtools zran-tools -y
 }
 
 function wifi_network() {
@@ -610,7 +634,8 @@ do
     echo -e "\e[33m*Requirement*"
     echo -e "\e[33m0\e[32m) Create Hotspot & Enable SSH    \e[33m00\e[32m) Connect WiFi Network"
     echo -e "\e[33mc\e[32m) Create Hotspot Only            \e[33mcheck\e[32m) Check Tools"
-    echo -e "\e[33mrpi0w\e[32m) Raspberry Pi Zero W Configure"
+    echo -e "\e[33mrpi\e[32m) RPI Zero 2 W Configure       \e[33md\e[32m) Remove Hotsport"
+    echo -e "\e[33mshow\e[32m) Show Networks"
     echo -e ""
     echo -e "\e[33m*Hardware*"
     echo -e "\e[33m01\e[37m) Change Mac-Address            \e[31m| \e[33m03\e[37m) Change Private IP Address"
@@ -636,8 +661,10 @@ do
       0) hotsport_ssh;;
       00) wifi_network;;
       c) hotsport_only;;
+      d) delete_hotsport;;
+      show) show_networks;;
       check) tools_check;;
-      rpi0w) rpi0w;;
+      rpi) rpi;;
       1) change_mac_address;;
       2) restore_mac_address;;
       3) ip_change;;
