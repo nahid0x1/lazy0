@@ -76,6 +76,29 @@ function show_networks(){
 
 }
 
+hostname_change() {
+    clear
+    # Prompt the user for the new hostname
+    read -p "Enter the new hostname: " new_hostname
+
+    # Check if the new hostname is provided
+    if [[ -z "$new_hostname" ]]; then
+        echo "Error: No hostname provided. Exiting."
+        exit 1
+    fi
+
+    # Change the current hostname
+    echo "Changing hostname to '$new_hostname'..."
+    sudo hostnamectl set-hostname "$new_hostname"
+
+    # Update /etc/hostname file
+    echo "$new_hostname" | sudo tee /etc/hostname > /dev/null
+
+    # Update /etc/hosts file
+    sudo sed -i "s/^\(127\.0\.1\.1\s*\).*/\1$new_hostname/" /etc/hosts
+
+    echo "Hostname has been changed to '$new_hostname' and made permanent."
+}
 
 function hotsport_ssh() {
   echo -e "***Hotspot Setup***\n"
@@ -141,7 +164,7 @@ function rpi() {
   echo "mon0 Configuration Successfull"
 
   apt update
-  apt install hcxtools zran-tools -y
+  apt install hcxtools -y
 }
 
 function wifi_network() {
@@ -622,7 +645,7 @@ while true
 do
     # Display the menu options
     clear
-    echo -e "\n\e[0;32m    ██╗      █████╗ ███████╗██╗   ██╗\e[0;38;5;128m██████╗ ██╗ \e[0;37mv2.1"
+    echo -e "\n\e[0;32m    ██╗      █████╗ ███████╗██╗   ██╗\e[0;38;5;128m██████╗ ██╗ \e[0;37mv3.0"
     echo -e "\e[0;32m    ██║     ██╔══██╗╚══███╔╝╚██╗ ██╔╝\e[0;38;5;128m██╔══██╗██║"
     echo -e "\e[0;32m    ██║     ███████║  ███╔╝  ╚████╔╝ \e[0;38;5;128m██████╔╝██║  \e[0;37mBy \e[0;31m#Nahid0x1"
     echo -e "\e[0;32m    ██║     ██╔══██║ ███╔╝    ╚██╔╝  \e[0;38;5;128m██╔═══╝ ██║"
@@ -632,20 +655,20 @@ do
     echo -e "\e[33mSelect an option:\n\e[32m"
     echo -e ""
     echo -e "\e[33m*Requirement*"
-    echo -e "\e[33m0\e[32m) Create Hotspot & Enable SSH    \e[33m00\e[32m) Connect WiFi Network"
-    echo -e "\e[33mc\e[32m) Create Hotspot Only            \e[33mcheck\e[32m) Check Tools"
-    echo -e "\e[33mrpi\e[32m) RPI Zero 2 W Configure       \e[33md\e[32m) Remove Hotsport"
-    echo -e "\e[33mshow\e[32m) Show Networks"
+    echo -e "\e[33m0\e[32m) Create Hotspot & Enable SSH    \e[31m| \e[33m00\e[32m) Connect WiFi Network"
+    echo -e "\e[33mc\e[32m) Create Hotspot Only            \e[31m| \e[33mshow\e[32m) Show Networks"
+    echo -e "\e[33md\e[32m) Remove Hotsport                \e[31m| \e[33mrpi\e[32m) RPI Zero 2 W Configure"
+    echo -e "\e[33mcheck\e[32m) Check Tools                \e[31m| \e[33mhost\e[32m) Hostname Change"
     echo -e ""
     echo -e "\e[33m*Hardware*"
     echo -e "\e[33m01\e[37m) Change Mac-Address            \e[31m| \e[33m03\e[37m) Change Private IP Address"
     echo -e "\e[33m02\e[37m) Restore Original Mac-Address  \e[31m| \e[33m04\e[37m) Restore IP Address"
     echo -e ""
     echo -e "\e[33m*WIFI Hacking*"
-    echo -e "\e[33m05\e[37m) START Monitor Mode           \e[31m| \e[33m17\e[37m) Monitor Wifi Clients"
-    echo -e "\e[33m06\e[37m) STOP Monitor Mode            \e[31m| \e[33m18\e[37m) WPS Pin Crack [Reaver]"
-    echo -e "\e[33m07\e[37m) Wifite                       \e[31m| \e[33m19\e[37m) Wifi-Pumpkin3"
-    echo -e "\e[33m08\e[37m) WEP Hunt Only [Wifite]       \e[31m| \e[33m20\e[37m) Wifi-Phisher"
+    echo -e "\e[33m05\e[37m) START Monitor Mode            \e[31m| \e[33m17\e[37m) Monitor Wifi Clients"
+    echo -e "\e[33m06\e[37m) STOP Monitor Mode             \e[31m| \e[33m18\e[37m) WPS Pin Crack [Reaver]"
+    echo -e "\e[33m07\e[37m) Wifite                        \e[31m| \e[33m19\e[37m) Wifi-Pumpkin3"
+    echo -e "\e[33m08\e[37m) WEP Hunt Only [Wifite]        \e[31m| \e[33m20\e[37m) Wifi-Phisher"
     echo -e "\e[33m09\e[37m) WPS Hunt Only [Wifite]"
     echo -e "\e[33m10\e[37m) Fake AP Only"
     echo -e "\e[33m11\e[37m) WEP Crack"
@@ -665,6 +688,7 @@ do
       show) show_networks;;
       check) tools_check;;
       rpi) rpi;;
+      host) hostname_change;;
       1) change_mac_address;;
       2) restore_mac_address;;
       3) ip_change;;
